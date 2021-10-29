@@ -1,4 +1,5 @@
-namespace AsyncConOut{
+namespace AsyncConOut
+{
     public class Out
     {
         public static ConsoleColor DefaultForegroundColor = ConsoleColor.White;
@@ -7,7 +8,7 @@ namespace AsyncConOut{
         public static bool CancelOutputTask = false;
         public static bool ResetToDefaultColor = true;
         public static FileStream LogFileStream;
-        public static uint DelayBetweenOutputChecks = 100;
+        public static int DelayBetweenOutputChecks = 100;
 
         public class Output
         {
@@ -23,6 +24,11 @@ namespace AsyncConOut{
             }
         }
 
+        /// <summary>
+        /// Calling this function creates a task that displays messages asynchronously in the console.
+        /// </summary>
+        /// <param name="clearQueue">If true, then the message queue is deleted before the task starts.</param>
+        /// <returns>Returns the Task, that is used for the output.</returns>
         public static Task RunOutputTaskAsync(bool clearQueue = false)
         {
             if (clearQueue)
@@ -43,7 +49,8 @@ namespace AsyncConOut{
                                 Console.WriteLine(OutputMessages[Index].Text);
                                 if (LogFileStream != null)
                                 {
-                                    LogFileStream.Write(Encoding.UTF8.GetBytes(OutputMessages[Index].Text + "\n"));
+                                    byte[] msg = Encoding.UTF8.GetBytes(OutputMessages[Index].Text + "\n");
+                                    LogFileStream.Write(msg, 0, msg.Length);
                                 }
                             }
                             else
@@ -51,7 +58,8 @@ namespace AsyncConOut{
                                 Console.Write(OutputMessages[Index].Text);
                                 if (LogFileStream != null)
                                 {
-                                    LogFileStream.Write(Encoding.UTF8.GetBytes(OutputMessages[Index].Text));
+                                    byte[] msg = Encoding.UTF8.GetBytes(OutputMessages[Index].Text);
+                                    LogFileStream.Write(msg, 0, msg.Length);
                                 }
                             }
                             Index++;
@@ -61,51 +69,74 @@ namespace AsyncConOut{
                             Console.ForegroundColor = DefaultForegroundColor;
                         }
                     }
-                    Thread.Sleep((int)DelayBetweenOutputChecks);
+                    Thread.Sleep(DelayBetweenOutputChecks);
                 }
             });
             return t;
         }
 
+        /// <summary>
+        /// This function returns the representation of the time as a string.
+        /// </summary>
         public static string GetTimeString()
         {
             DateTime now = DateTime.Now;
             return now.Hour.ToString("00") + ":" + now.Minute.ToString("00") + ":" + now.Second.ToString("00") + "." +
                 now.Millisecond.ToString();
         }
+        /// <summary>
+        /// This function returns the representation of the date as a string.
+        /// </summary>
         public static string GetDateString()
         {
             DateTime now = DateTime.Now;
             return now.Day.ToString("00") + "." + now.Month.ToString("00") + "." + now.Year.ToString();
         }
+        /// <summary>
+        /// This function sets the foreground color of the console to the color specified in DefaultForegroundColor.
+        /// </summary>
         public static void ResetColor()
         {
             Console.ForegroundColor = DefaultForegroundColor;
         }
+        /// <summary>
+        /// This function inserts a line into the queue and uses the color blue in the output.
+        /// </summary>
+        /// <param name="text">The message to output</param>
         public static void Info(string text)
         {
             OutputMessages.Add(new Output(text, ConsoleColor.DarkBlue, true));
         }
+        /// <summary>
+        /// This function inserts a message into the queue and uses the color blue in the output.
+        /// There is no line break.
+        /// </summary>
+        /// <param name="text">The message to output</param>
         public static void Infosl(string text)
         {
             OutputMessages.Add(new Output(text, ConsoleColor.DarkBlue, false));
         }
+        /// <summary>
+        /// This function inserts a line into the queue and uses the color red in the output.
+        /// </summary>
+        /// <param name="text">The message to output</param>
         public static void Error(string text)
         {
             OutputMessages.Add(new Output(text, ConsoleColor.DarkRed, true));
         }
+        /// <summary>
+        /// This function inserts a line into the queue and uses the default foreground color.
+        /// </summary>
+        /// <param name="text">The message to output</param>
         public static void Log(string text)
         {
             OutputMessages.Add(new Output(text, DefaultForegroundColor, true));
         }
-        public static void LowInfo(string text)
-        {
-            OutputMessages.Add(new Output(text, ConsoleColor.Blue, true));
-        }
-        public static void LowInfosl(string text)
-        {
-            OutputMessages.Add(new Output(text, ConsoleColor.Blue, false));
-        }
+        /// <summary>
+        /// This function inserts a line into the queue and uses the default foreground color.
+        /// There is no line break.
+        /// </summary>
+        /// <param name="text">The message to output</param>
         public static void Logsl(string text)
         {
             OutputMessages.Add(new Output(text, DefaultForegroundColor, false));
